@@ -124,6 +124,38 @@ TO_DIGITS =
     ]
   ][MOD[n][TEN]] } }]
 
+ZEROS = Z[-> f { UNSHIFT[f][ZERO]} ]
+
+UPWARDS_OF = Z[-> f { -> n { UNSHIFT[-> x { f[INCREMENT[n]][x] }][n] } }]
+
+MULTIPLES_OF =
+  -> m {
+    Z[-> f {
+      -> n { UNSHIFT[-> x { f[ADD[m][n]][x] }][n] }
+    }][m]
+  }
+
+MULTIPLY_STREAMS =
+  Z[-> f {
+    -> k { -> l {
+      UNSHIFT[-> x { f[REST[k]][REST[l]][x] }][MULTIPLY[FIRST[k]][FIRST[l]]]
+    } }
+  }]
+
+MOD2 =
+  -> m { -> n {
+    m[-> x {
+      IF[IS_LESS_OR_EQUAL[n][x]][
+        SUBTRACT[x][n]
+      ][
+        x
+      ]
+    }][m]
+  }}
+
+COUNTDOWN = -> p { PAIR[UNSHIFT[LEFT[p]][RIGHT[p]]][DECREMENT[RIGHT[p]]] }
+RANGE2 = -> m { -> n { LEFT[INCREMENT[SUBTRACT[n][m]][COUNTDOWN][PAIR[EMPTY][n]]] } }
+
 def to_integer(proc)
   proc[-> n { n + 1 }][0]
 end
@@ -132,12 +164,13 @@ def to_boolean(proc)
   IF[proc][true][false]
 end
 
-def to_array(proc)
+def to_array(proc, count = nil)
   array = []
 
-  until to_boolean(IS_EMPTY[proc])
+  until to_boolean(IS_EMPTY[proc]) || count == 0
     array.push(FIRST[proc])
     proc = REST[proc]
+    count = count - 1 unless count.nil?
   end
 
   array
@@ -163,4 +196,26 @@ def solution
       TO_DIGITS[n]
     ]]]
   }]
+end
+
+def multiples_of(n)
+  Enumerator.new do |yielder|
+    value = n
+    loop do
+      yielder.yield(value)
+      value = value + n
+    end
+  end
+end
+
+def decrease(m, n)
+  if n <= m
+    m-n
+  else
+    m
+  end
+end
+
+def countdown(pair)
+  [pair.first.unshift(pair.last), pair.last - 1]
 end
